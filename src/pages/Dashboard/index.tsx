@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Image, ScrollView } from 'react-native';
 
 import Icon from 'react-native-vector-icons/Feather';
@@ -55,11 +55,28 @@ const Dashboard: React.FC = () => {
 
   async function handleNavigate(id: number): Promise<void> {
     // Navigate do ProductDetails page
+    navigation.navigate('FoodDetails', { id });
   }
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
       // Load Foods from API
+      try {
+        const response = await api.get('/foods', {
+          params: {
+            category_like: selectedCategory,
+            name_like: searchValue,
+          },
+        });
+        setFoods(
+          response.data.map((food: Food) => ({
+            ...food,
+            formattedPrice: formatValue(food.price),
+          })),
+        );
+      } catch (err) {
+        console.log('Erro ao tentar carregar foods na api.');
+      }
     }
 
     loadFoods();
@@ -68,6 +85,12 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     async function loadCategories(): Promise<void> {
       // Load categories from API
+      try {
+        const response = await api.get('/categories');
+        setCategories(response.data);
+      } catch (err) {
+        console.log('Erro ao tentar carregar as categorias na api');
+      }
     }
 
     loadCategories();
@@ -75,6 +98,9 @@ const Dashboard: React.FC = () => {
 
   function handleSelectCategory(id: number): void {
     // Select / deselect category
+    selectedCategory === id
+      ? setSelectedCategory(undefined)
+      : setSelectedCategory(id);
   }
 
   return (
